@@ -2,30 +2,29 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Tracks the OS-level prefers-color-scheme so non-CSS components
- * (e.g. Recharts SVG colors) can pick the right palette.
+ * Tracks whether the `dark` class is currently set on <html>, so non-CSS
+ * components (Recharts SVG colors) can pick the right palette.
  *
- * Returns false during SSR — chart colors render in light initially and
- * swap to dark on mount. Acceptable since Recharts is client-only.
+ * We observe the class attribute instead of `prefers-color-scheme` because
+ * the user can override OS preference via the ThemeToggle — and the source
+ * of truth in either case is the `dark` class itself.
  */
 export function useDarkMode(): boolean {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDark(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
+    const root = document.documentElement;
+    const read = () => setIsDark(root.classList.contains('dark'));
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   return isDark;
 }
 
-/**
- * Shared chart palette — keep colors here so all charts pick up theme
- * changes in lockstep.
- */
+/** Shared chart palette — colors picked for legibility in each theme. */
 export function chartColors(isDark: boolean) {
   return {
     grid:        isDark ? '#1e293b' : '#e2e8f0',

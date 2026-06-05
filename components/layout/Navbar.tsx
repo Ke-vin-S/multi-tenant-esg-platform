@@ -1,6 +1,7 @@
 'use client';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 
 const ROLE_TONE = {
@@ -38,6 +39,7 @@ export function Navbar() {
         ) : null}
       </div>
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         {user && (
           <>
             <div className="text-right text-xs">

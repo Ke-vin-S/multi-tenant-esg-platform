@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 
 interface DemoUser {
   email: string;
@@ -81,7 +82,10 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="space-y-5">
+    <Card className="relative space-y-5">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="text-center">
         <div className="text-brand-700 text-3xl dark:text-brand-300">◉</div>
         <h1 className="mt-2 text-xl font-semibold text-ink-900 dark:text-ink-50">ESG Aggregation Platform</h1>

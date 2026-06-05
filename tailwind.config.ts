@@ -6,8 +6,11 @@ const config: Config = {
     './components/**/*.{ts,tsx}',
     './hooks/**/*.{ts,tsx}',
   ],
-  // Follow the OS theme via prefers-color-scheme. No manual toggle, no flash.
-  darkMode: 'media',
+  // Class-based: a `dark` class on <html> turns the theme on.
+  // The class is managed by lib/theme.ts (initial state set by an inline
+  // script in app/layout.tsx so there's no FOUC). User preference persists
+  // in localStorage; in 'system' mode we follow prefers-color-scheme.
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
