@@ -1,0 +1,85 @@
+// ESG PoC — schema mirrors agent_docs/data-model.md.
+// RLS policies live in a raw-SQL migration (prisma/migrations/.../migration.sql),
+// not in this file — Prisma does not model RLS.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum SectorProfile {
+  FINANCIAL
+  AGRICULTURE
+  LEISURE
+}
+
+enum Role {
+  SUBSIDIARY_OFFICER
+  CORPORATE_ANALYST
+  GLOBAL_ADMIN
+}
+
+enum EmissionScope {
+  SCOPE_1
+  SCOPE_2
+  SCOPE_3
+}
+
+model Tenant {
+  id            String        @id @default(cuid())
+  name          String
+  sectorProfile SectorProfile
+  region        String
+  createdAt     DateTime      @default(now())
+
+  users         User[]
+  metricEntries MetricEntry[]
+}
+
+model User {
+  id        String @id @default(cuid())
+  cognitoId String @unique
+  email     String @unique
+  tenantId  String
+  role      Role
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model MetricDefinition {
+  id            String         @id @default(cuid())
+  name          String
+  metricType    String
+  unit          String
+  sectorProfile SectorProfile
+  scope         EmissionScope?
+
+  entries MetricEntry[]
+
+  @@unique([metricType, sectorProfile])
+  @@index([sectorProfile])
+}
+
+model MetricEntry {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  metricDefinitionId String
+  rawValue           Float
+  unit               String
+  co2eKg             Float?
+  reportingMonth     DateTime
+  evidenceUrl        String?
+  submittedAt        DateTime @default(now())
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  metricDefinition MetricDefinition @relation(fields: [metricDefinitionId], references: [id])
+
+  @@index([tenantId, reportingMonth])
+  @@index([metricDefinitionId])
+}
