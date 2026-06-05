@@ -1,1 +1,32 @@
 CLAUDE.local.md
+settings.local.json
+
+# env
+.env
+.env.local
+.env*.local
+
+# next
+.next/
+out/
+build/
+
+# deps
+node_modules/
+
+# tests
+coverage/
+.vitest-cache/
+
+# local evidence storage (dev mode)
+tmp/
+
+# editor / os
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
