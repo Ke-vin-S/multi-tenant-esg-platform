@@ -1,6 +1,6 @@
 'use client';
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -39,7 +39,6 @@ export default function LoginPage() {
 }
 
 function LoginInner() {
-  const router = useRouter();
   const params = useSearchParams();
   const next = params.get('next');
   const [users, setUsers] = useState<DemoUser[] | null>(null);
@@ -72,11 +71,12 @@ function LoginInner() {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error ?? 'Sign-in failed');
       }
-      router.push(next || dashboardForRole(role));
-      router.refresh();
+      // Hard navigation forces middleware to see the just-set cookie on the
+      // next request. router.push + router.refresh races the cookie write
+      // and can bounce the user back to /login.
+      window.location.assign(next || dashboardForRole(role));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in failed');
-    } finally {
       setBusyEmail(null);
     }
   }

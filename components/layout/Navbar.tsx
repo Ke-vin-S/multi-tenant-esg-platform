@@ -1,5 +1,4 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,12 +17,11 @@ const ROLE_LABEL = {
 
 export function Navbar() {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-    router.push('/login');
-    router.refresh();
+    // Hard navigation so middleware sees the cleared cookie immediately.
+    window.location.assign('/login');
   }
 
   return (
