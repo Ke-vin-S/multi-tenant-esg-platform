@@ -74,8 +74,8 @@ export default function OverviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-ink-900">Subsidiary overview</h1>
-        <p className="mt-1 text-sm text-ink-500">
+        <h1 className="text-2xl font-semibold text-ink-900 dark:text-ink-50">Subsidiary overview</h1>
+        <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
           {user?.tenantName} — fiscal year totals across all submitted metrics.
         </p>
       </div>
@@ -97,7 +97,7 @@ export default function OverviewPage() {
           {donut.length > 0 ? (
             <ResourceDonutChart data={donut} />
           ) : (
-            <p className="text-sm text-ink-500">No carbon-bearing metrics submitted.</p>
+            <p className="text-sm text-ink-500 dark:text-ink-400">No carbon-bearing metrics submitted.</p>
           )}
         </Card>
       </div>
@@ -107,10 +107,10 @@ export default function OverviewPage() {
           <CardHeader title="Resource & social metrics" subtitle="Non-carbon — tracked as raw totals over the period." />
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from(nonCarbon.entries()).map(([name, v]) => (
-              <div key={name} className="rounded-lg border border-ink-200 p-4">
-                <dt className="text-xs font-medium tracking-wide text-ink-500 uppercase">{name}</dt>
-                <dd className="mt-1 text-xl font-semibold tabular-nums text-ink-900">
-                  {formatNumber(v.total)} <span className="text-sm font-normal text-ink-500">{v.unit}</span>
+              <div key={name} className="rounded-lg border border-ink-200 p-4 dark:border-ink-800">
+                <dt className="text-xs font-medium tracking-wide text-ink-500 uppercase dark:text-ink-400">{name}</dt>
+                <dd className="mt-1 text-xl font-semibold tabular-nums text-ink-900 dark:text-ink-50">
+                  {formatNumber(v.total)} <span className="text-sm font-normal text-ink-500 dark:text-ink-400">{v.unit}</span>
                 </dd>
               </div>
             ))}
@@ -118,7 +118,7 @@ export default function OverviewPage() {
         </Card>
       )}
 
-      <div className="text-xs text-ink-400">
+      <div className="text-xs text-ink-400 dark:text-ink-500">
         Total in kilograms: {formatTonnes(totalCo2eKg)}
       </div>
     </div>

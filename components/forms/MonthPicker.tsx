@@ -12,7 +12,7 @@ export function MonthPicker({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-ink-700">{label}</span>
+      <span className="mb-1 block text-sm font-medium text-ink-700 dark:text-ink-200">{label}</span>
       <Input
         type="month"
         value={value}

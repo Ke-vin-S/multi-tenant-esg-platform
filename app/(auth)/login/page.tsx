@@ -83,13 +83,13 @@ export default function LoginPage() {
   return (
     <Card className="space-y-5">
       <div className="text-center">
-        <div className="text-brand-700 text-3xl">◉</div>
-        <h1 className="mt-2 text-xl font-semibold text-ink-900">ESG Aggregation Platform</h1>
-        <p className="mt-1 text-sm text-ink-500">Sign in as a demo persona to explore the PoC.</p>
+        <div className="text-brand-700 text-3xl dark:text-brand-300">◉</div>
+        <h1 className="mt-2 text-xl font-semibold text-ink-900 dark:text-ink-50">ESG Aggregation Platform</h1>
+        <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">Sign in as a demo persona to explore the PoC.</p>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
           {error}
         </div>
       )}
@@ -97,7 +97,7 @@ export default function LoginPage() {
       {users === null && !error && <LoadingSpinner label="Loading demo users…" />}
 
       {users && users.length === 0 && !error && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
           No demo users found. Run <code>npm run db:seed</code> to populate them.
         </div>
       )}
@@ -109,25 +109,25 @@ export default function LoginPage() {
               key={u.email}
               onClick={() => signIn(u.email, u.role)}
               disabled={busyEmail !== null}
-              className="group flex w-full items-start justify-between rounded-lg border border-ink-200 bg-white p-3 text-left transition-colors hover:border-brand-400 hover:bg-brand-50 disabled:opacity-50 focus-ring"
+              className="group flex w-full items-start justify-between rounded-lg border border-ink-200 bg-white p-3 text-left transition-colors hover:border-brand-400 hover:bg-brand-50 disabled:opacity-50 focus-ring dark:border-ink-700 dark:bg-ink-900 dark:hover:border-brand-500 dark:hover:bg-brand-900/30"
             >
               <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-ink-900">{u.email}</div>
+                <div className="truncate text-sm font-medium text-ink-900 dark:text-ink-50">{u.email}</div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
                   <Badge tone={ROLE_TONE[u.role]}>{ROLE_LABEL[u.role]}</Badge>
-                  <span className="text-xs text-ink-500">· {u.tenantName} · {u.sectorProfile}</span>
+                  <span className="text-xs text-ink-500 dark:text-ink-400">· {u.tenantName} · {u.sectorProfile}</span>
                 </div>
               </div>
               {busyEmail === u.email && (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-ink-300 border-t-brand-600" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-ink-300 border-t-brand-600 dark:border-ink-700 dark:border-t-brand-400" />
               )}
             </button>
           ))}
         </div>
       )}
 
-      <div className="rounded-lg border border-ink-200 bg-ink-50 p-3 text-[11px] leading-relaxed text-ink-500">
-        <strong className="text-ink-700">Dev mode.</strong> Cognito + S3 are not provisioned in this PoC build. Sessions are
+      <div className="rounded-lg border border-ink-200 bg-ink-50 p-3 text-[11px] leading-relaxed text-ink-500 dark:border-ink-800 dark:bg-ink-900/40 dark:text-ink-400">
+        <strong className="text-ink-700 dark:text-ink-200">Dev mode.</strong> Cognito + S3 are not provisioned in this PoC build. Sessions are
         signed locally and evidence uploads are written to <code>./tmp/evidence/</code>. Disable <code>DEV_AUTH_BYPASS</code> for prod.
       </div>
     </Card>

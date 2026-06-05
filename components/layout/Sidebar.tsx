@@ -24,10 +24,10 @@ export function Sidebar() {
   const showGlobal = user?.role === 'CORPORATE_ANALYST' || user?.role === 'GLOBAL_ADMIN';
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-r border-ink-200 bg-white md:flex">
-      <div className="border-b border-ink-200 px-5 py-4">
-        <div className="text-base font-semibold text-ink-900">ESG Platform</div>
-        <div className="text-xs text-ink-500">Carbon · Compliance · Aggregation</div>
+    <aside className="hidden w-60 shrink-0 flex-col border-r border-ink-200 bg-white md:flex dark:border-ink-800 dark:bg-ink-900">
+      <div className="border-b border-ink-200 px-5 py-4 dark:border-ink-800">
+        <div className="text-base font-semibold text-ink-900 dark:text-ink-50">ESG Platform</div>
+        <div className="text-xs text-ink-500 dark:text-ink-400">Carbon · Compliance · Aggregation</div>
       </div>
 
       <nav className="flex-1 space-y-6 px-3 py-4">
@@ -46,7 +46,7 @@ export function Sidebar() {
         )}
       </nav>
 
-      <div className="border-t border-ink-200 px-5 py-3 text-[10px] text-ink-400">
+      <div className="border-t border-ink-200 px-5 py-3 text-[10px] text-ink-400 dark:border-ink-800 dark:text-ink-500">
         v0.1 · PoC build
       </div>
     </aside>
@@ -56,7 +56,7 @@ export function Sidebar() {
 function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="px-3 pb-2 text-[11px] font-semibold tracking-wide text-ink-400 uppercase">{title}</div>
+      <div className="px-3 pb-2 text-[11px] font-semibold tracking-wide text-ink-400 uppercase dark:text-ink-500">{title}</div>
       <div className="space-y-1">{children}</div>
     </div>
   );
@@ -68,10 +68,12 @@ function SidebarLink({ href, label, icon, active }: { href: string; label: strin
       href={href}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-ring',
-        active ? 'bg-brand-50 text-brand-800' : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900',
+        active
+          ? 'bg-brand-50 text-brand-800 dark:bg-brand-900/30 dark:text-brand-200'
+          : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-50',
       )}
     >
-      <span className="w-5 text-center text-base text-ink-400">{icon}</span>
+      <span className="w-5 text-center text-base text-ink-400 dark:text-ink-500">{icon}</span>
       {label}
     </Link>
   );

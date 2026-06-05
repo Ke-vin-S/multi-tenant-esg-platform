@@ -7,8 +7,8 @@ export default function DataEntryPage() {
     <RoleGuard allow={['SUBSIDIARY_OFFICER']}>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-ink-900">Data entry</h1>
-          <p className="mt-1 text-sm text-ink-500">
+          <h1 className="text-2xl font-semibold text-ink-900 dark:text-ink-50">Data entry</h1>
+          <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
             Submit this month&apos;s metrics. CO₂e is computed server-side from emission factors —
             you only enter raw consumption.
           </p>

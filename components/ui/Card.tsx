@@ -24,8 +24,8 @@ export function CardHeader({
   return (
     <div className="mb-4 flex items-start justify-between gap-4">
       <div>
-        <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">{title}</h2>
-        {subtitle && <p className="mt-1 text-xs text-ink-500">{subtitle}</p>}
+        <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase dark:text-ink-400">{title}</h2>
+        {subtitle && <p className="mt-1 text-xs text-ink-500 dark:text-ink-400">{subtitle}</p>}
       </div>
       {action}
     </div>

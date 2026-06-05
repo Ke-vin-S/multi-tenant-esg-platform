@@ -38,14 +38,14 @@ function Inner() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-ink-900">Tenant directory</h1>
-        <p className="mt-1 text-sm text-ink-500">Submission compliance and recent emissions per subsidiary.</p>
+        <h1 className="text-2xl font-semibold text-ink-900 dark:text-ink-50">Tenant directory</h1>
+        <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">Submission compliance and recent emissions per subsidiary.</p>
       </div>
 
       <Card className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-ink-200 bg-ink-50 text-xs uppercase text-ink-500">
+            <thead className="border-b border-ink-200 bg-ink-50 text-xs uppercase text-ink-500 dark:border-ink-800 dark:bg-ink-900/60 dark:text-ink-400">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold">Tenant</th>
                 <th className="px-4 py-3 text-left font-semibold">Sector</th>
@@ -56,12 +56,12 @@ function Inner() {
             </thead>
             <tbody>
               {tenants.map((t) => (
-                <tr key={t.id} className="border-b border-ink-100 last:border-0 hover:bg-ink-50">
-                  <td className="px-4 py-3 font-medium text-ink-900">{t.name}</td>
+                <tr key={t.id} className="border-b border-ink-100 last:border-0 hover:bg-ink-50 dark:border-ink-800 dark:hover:bg-ink-800/40">
+                  <td className="px-4 py-3 font-medium text-ink-900 dark:text-ink-50">{t.name}</td>
                   <td className="px-4 py-3"><Badge tone="neutral">{t.sectorProfile}</Badge></td>
-                  <td className="px-4 py-3 text-ink-700">{t.region}</td>
+                  <td className="px-4 py-3 text-ink-700 dark:text-ink-200">{t.region}</td>
                   <td className="px-4 py-3"><ComplianceBadge status={t.status} /></td>
-                  <td className="px-4 py-3 text-right tabular-nums text-ink-900">
+                  <td className="px-4 py-3 text-right tabular-nums text-ink-900 dark:text-ink-50">
                     {formatNumber(t.recentTotalCo2eKg / 1000)}
                   </td>
                 </tr>

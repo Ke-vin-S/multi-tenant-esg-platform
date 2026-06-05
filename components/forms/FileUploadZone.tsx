@@ -36,9 +36,9 @@ export function FileUploadZone({ onUploaded, onClear, uploadedFilename }: Props)
 
   if (uploadedFilename) {
     return (
-      <div className="flex items-center justify-between rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm">
-        <span className="text-brand-800">✓ Evidence attached</span>
-        <button type="button" onClick={onClear} className="text-xs text-ink-500 hover:text-ink-700 focus-ring">
+      <div className="flex items-center justify-between rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm dark:border-brand-700 dark:bg-brand-900/30">
+        <span className="text-brand-800 dark:text-brand-200">✓ Evidence attached</span>
+        <button type="button" onClick={onClear} className="text-xs text-ink-500 hover:text-ink-700 focus-ring dark:text-ink-400 dark:hover:text-ink-200">
           Remove
         </button>
       </div>
@@ -50,7 +50,9 @@ export function FileUploadZone({ onUploaded, onClear, uploadedFilename }: Props)
       <div
         className={cn(
           'flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors',
-          dragOver ? 'border-brand-500 bg-brand-50' : 'border-ink-200 bg-ink-50',
+          dragOver
+            ? 'border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-900/30'
+            : 'border-ink-200 bg-ink-50 dark:border-ink-700 dark:bg-ink-900/40',
         )}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
@@ -60,8 +62,8 @@ export function FileUploadZone({ onUploaded, onClear, uploadedFilename }: Props)
           handleFiles(e.dataTransfer.files);
         }}
       >
-        <div className="text-sm font-medium text-ink-700">Drop a PDF or image as evidence</div>
-        <div className="text-xs text-ink-500">PDF, PNG, JPEG — up to 10 MiB. Optional.</div>
+        <div className="text-sm font-medium text-ink-700 dark:text-ink-200">Drop a PDF or image as evidence</div>
+        <div className="text-xs text-ink-500 dark:text-ink-400">PDF, PNG, JPEG — up to 10 MiB. Optional.</div>
         <input
           ref={inputRef}
           type="file"
@@ -79,7 +81,7 @@ export function FileUploadZone({ onUploaded, onClear, uploadedFilename }: Props)
           {busy ? 'Uploading…' : 'Choose file'}
         </Button>
       </div>
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 }

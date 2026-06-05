@@ -85,7 +85,7 @@ export function DynamicMetricForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <MonthPicker value={month} onChange={setMonth} />
           <div>
-            <span className="mb-1 block text-sm font-medium text-ink-700">Evidence (optional)</span>
+            <span className="mb-1 block text-sm font-medium text-ink-700 dark:text-ink-200">Evidence (optional)</span>
             <FileUploadZone
               onUploaded={setEvidenceUrl}
               onClear={() => setEvidenceUrl(null)}
@@ -110,7 +110,7 @@ export function DynamicMetricForm() {
       )}
 
       <div className="flex items-center justify-between">
-        <div className="text-xs text-ink-500">
+        <div className="text-xs text-ink-500 dark:text-ink-400">
           Leave a field blank to skip it. Each filled field creates one MetricEntry.
         </div>
         <Button type="submit" loading={submitting} disabled={submitting}>
@@ -119,13 +119,19 @@ export function DynamicMetricForm() {
       </div>
 
       {result && (
-        <Card className={result.errors.length === 0 ? 'border-brand-200 bg-brand-50' : 'border-amber-200 bg-amber-50'}>
-          <div className="text-sm font-medium text-ink-900">
+        <Card
+          className={
+            result.errors.length === 0
+              ? 'border-brand-200 bg-brand-50 dark:border-brand-700 dark:bg-brand-900/30'
+              : 'border-amber-200 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/30'
+          }
+        >
+          <div className="text-sm font-medium text-ink-900 dark:text-ink-50">
             {result.created > 0 && `Saved ${result.created} entr${result.created === 1 ? 'y' : 'ies'}.`}
             {result.created === 0 && result.errors.length === 0 && 'No values entered.'}
           </div>
           {result.errors.length > 0 && (
-            <ul className="mt-2 list-disc pl-5 text-xs text-amber-800">
+            <ul className="mt-2 list-disc pl-5 text-xs text-amber-800 dark:text-amber-200">
               {result.errors.map((e) => <li key={e}>{e}</li>)}
             </ul>
           )}
@@ -148,7 +154,7 @@ function FieldGrid({
     <div className="grid gap-4 sm:grid-cols-2">
       {defs.map((d) => (
         <label key={d.id} className="block">
-          <span className="mb-1 flex items-center gap-2 text-sm font-medium text-ink-700">
+          <span className="mb-1 flex items-center gap-2 text-sm font-medium text-ink-700 dark:text-ink-200">
             {d.name}
             {d.scope && <Badge tone="neutral">{d.scope.replace('_', ' ')}</Badge>}
           </span>

@@ -17,19 +17,19 @@ export function SubsidiaryLeaderboard({ rows }: { rows: LeaderboardRow[] }) {
         const tonnes = r.totalCo2eKg / 1000;
         const pct = (r.totalCo2eKg / max) * 100;
         return (
-          <li key={r.id} className="flex items-center gap-4 rounded-lg p-3 hover:bg-ink-50">
-            <span className="w-6 text-right text-sm font-semibold text-ink-400 tabular-nums">{i + 1}</span>
+          <li key={r.id} className="flex items-center gap-4 rounded-lg p-3 hover:bg-ink-50 dark:hover:bg-ink-800">
+            <span className="w-6 text-right text-sm font-semibold text-ink-400 tabular-nums dark:text-ink-500">{i + 1}</span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="truncate text-sm font-medium text-ink-900">{r.name}</span>
+                <span className="truncate text-sm font-medium text-ink-900 dark:text-ink-50">{r.name}</span>
                 <Badge tone="neutral">{r.sectorProfile}</Badge>
               </div>
-              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-ink-100">
-                <div className="h-full rounded-full bg-brand-500" style={{ width: `${pct}%` }} />
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-ink-100 dark:bg-ink-800">
+                <div className="h-full rounded-full bg-brand-500 dark:bg-brand-400" style={{ width: `${pct}%` }} />
               </div>
             </div>
-            <div className="w-32 text-right text-sm tabular-nums text-ink-900">
-              {formatNumber(tonnes)} <span className="text-ink-500">tCO₂e</span>
+            <div className="w-32 text-right text-sm tabular-nums text-ink-900 dark:text-ink-50">
+              {formatNumber(tonnes)} <span className="text-ink-500 dark:text-ink-400">tCO₂e</span>
             </div>
           </li>
         );

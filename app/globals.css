@@ -4,25 +4,27 @@
 
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: light dark;
   }
   html, body {
     height: 100%;
   }
   body {
-    @apply bg-ink-50 text-ink-900 antialiased;
+    @apply bg-ink-50 text-ink-900 antialiased dark:bg-ink-950 dark:text-ink-50;
     font-family: var(--font-inter), Inter, system-ui, sans-serif;
   }
   ::selection {
-    @apply bg-brand-200 text-ink-900;
+    @apply bg-brand-200 text-ink-900 dark:bg-brand-700 dark:text-ink-50;
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border border-ink-200 bg-white shadow-card;
+    @apply rounded-xl border border-ink-200 bg-white shadow-card
+           dark:border-ink-800 dark:bg-ink-900 dark:shadow-none;
   }
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2
+           dark:focus-visible:ring-brand-400 dark:focus-visible:ring-offset-ink-950;
   }
 }

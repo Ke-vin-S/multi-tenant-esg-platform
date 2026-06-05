@@ -6,6 +6,8 @@ const config: Config = {
     './components/**/*.{ts,tsx}',
     './hooks/**/*.{ts,tsx}',
   ],
+  // Follow the OS theme via prefers-color-scheme. No manual toggle, no flash.
+  darkMode: 'media',
   theme: {
     extend: {
       colors: {
@@ -33,6 +35,7 @@ const config: Config = {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
+          950: '#020617',
         },
       },
       fontFamily: {

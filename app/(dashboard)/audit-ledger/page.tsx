@@ -26,8 +26,8 @@ export default function AuditLedgerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-ink-900">Audit ledger</h1>
-        <p className="mt-1 text-sm text-ink-500">
+        <h1 className="text-2xl font-semibold text-ink-900 dark:text-ink-50">Audit ledger</h1>
+        <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
           Every submitted MetricEntry for this tenant. Raw values are preserved alongside CO₂e for traceability.
         </p>
       </div>
@@ -35,7 +35,7 @@ export default function AuditLedgerPage() {
       <Card className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-ink-200 bg-ink-50 text-xs uppercase text-ink-500">
+            <thead className="border-b border-ink-200 bg-ink-50 text-xs uppercase text-ink-500 dark:border-ink-800 dark:bg-ink-900/60 dark:text-ink-400">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold">Month</th>
                 <th className="px-4 py-3 text-left font-semibold">Metric</th>
@@ -48,20 +48,22 @@ export default function AuditLedgerPage() {
             </thead>
             <tbody>
               {entries.map((e) => (
-                <tr key={e.id} className="border-b border-ink-100 last:border-0 hover:bg-ink-50">
-                  <td className="px-4 py-3 text-ink-700">{monthLabel(e.reportingMonth)}</td>
-                  <td className="px-4 py-3 font-medium text-ink-900">{e.metricName}</td>
+                <tr key={e.id} className="border-b border-ink-100 last:border-0 hover:bg-ink-50 dark:border-ink-800 dark:hover:bg-ink-800/40">
+                  <td className="px-4 py-3 text-ink-700 dark:text-ink-200">{monthLabel(e.reportingMonth)}</td>
+                  <td className="px-4 py-3 font-medium text-ink-900 dark:text-ink-50">{e.metricName}</td>
                   <td className="px-4 py-3">
-                    {e.scope ? <Badge tone="neutral">{e.scope.replace('_', ' ')}</Badge> : <span className="text-xs text-ink-400">—</span>}
+                    {e.scope
+                      ? <Badge tone="neutral">{e.scope.replace('_', ' ')}</Badge>
+                      : <span className="text-xs text-ink-400 dark:text-ink-500">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-ink-700">
-                    {formatNumber(e.rawValue)} <span className="text-xs text-ink-400">{e.unit}</span>
+                  <td className="px-4 py-3 text-right tabular-nums text-ink-700 dark:text-ink-200">
+                    {formatNumber(e.rawValue)} <span className="text-xs text-ink-400 dark:text-ink-500">{e.unit}</span>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">
                     {e.co2eKg !== null ? (
-                      <span className="text-ink-900">{formatNumber(e.co2eKg)}</span>
+                      <span className="text-ink-900 dark:text-ink-50">{formatNumber(e.co2eKg)}</span>
                     ) : (
-                      <span className="text-xs text-ink-400">n/a</span>
+                      <span className="text-xs text-ink-400 dark:text-ink-500">n/a</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -72,15 +74,15 @@ export default function AuditLedgerPage() {
                           : e.evidenceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-brand-700 hover:underline focus-ring"
+                        className="text-brand-700 hover:underline focus-ring dark:text-brand-300"
                       >
                         View
                       </a>
                     ) : (
-                      <span className="text-xs text-ink-400">—</span>
+                      <span className="text-xs text-ink-400 dark:text-ink-500">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-ink-500">
+                  <td className="px-4 py-3 text-xs text-ink-500 dark:text-ink-400">
                     {new Date(e.submittedAt).toLocaleString()}
                   </td>
                 </tr>

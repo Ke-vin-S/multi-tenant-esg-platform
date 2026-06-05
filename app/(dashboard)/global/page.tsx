@@ -57,8 +57,8 @@ function GlobalInner() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-ink-900">Group overview</h1>
-        <p className="mt-1 text-sm text-ink-500">Consolidated CO₂e across all subsidiaries · current fiscal year.</p>
+        <h1 className="text-2xl font-semibold text-ink-900 dark:text-ink-50">Group overview</h1>
+        <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">Consolidated CO₂e across all subsidiaries · current fiscal year.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -83,11 +83,11 @@ function GlobalInner() {
                 return (
                   <li key={s.sector}>
                     <div className="mb-1 flex justify-between text-sm">
-                      <span className="font-medium text-ink-700">{s.sector}</span>
-                      <span className="tabular-nums text-ink-500">{formatNumber(s.totalCo2eKg / 1000)} tCO₂e</span>
+                      <span className="font-medium text-ink-700 dark:text-ink-200">{s.sector}</span>
+                      <span className="tabular-nums text-ink-500 dark:text-ink-400">{formatNumber(s.totalCo2eKg / 1000)} tCO₂e</span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-ink-100">
-                      <div className="h-full rounded-full bg-brand-500" style={{ width: `${pct}%` }} />
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-ink-100 dark:bg-ink-800">
+                      <div className="h-full rounded-full bg-brand-500 dark:bg-brand-400" style={{ width: `${pct}%` }} />
                     </div>
                   </li>
                 );

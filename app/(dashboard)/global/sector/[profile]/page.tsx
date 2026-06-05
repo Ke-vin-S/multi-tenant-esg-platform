@@ -24,7 +24,7 @@ export default function SectorPage() {
 
   return (
     <RoleGuard allow={['CORPORATE_ANALYST', 'GLOBAL_ADMIN']}>
-      {VALID.includes(sector) ? <SectorInner sector={sector} /> : <p className="text-sm text-ink-500">Unknown sector.</p>}
+      {VALID.includes(sector) ? <SectorInner sector={sector} /> : <p className="text-sm text-ink-500 dark:text-ink-400">Unknown sector.</p>}
     </RoleGuard>
   );
 }
@@ -46,8 +46,8 @@ function SectorInner({ sector }: { sector: SectorProfile }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-ink-900">{sector} sector</h1>
-        <p className="mt-1 text-sm text-ink-500">CO₂e across {data.perTenant.length} subsidiar{data.perTenant.length === 1 ? 'y' : 'ies'} · fiscal year to date.</p>
+        <h1 className="text-2xl font-semibold text-ink-900 dark:text-ink-50">{sector} sector</h1>
+        <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">CO₂e across {data.perTenant.length} subsidiar{data.perTenant.length === 1 ? 'y' : 'ies'} · fiscal year to date.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

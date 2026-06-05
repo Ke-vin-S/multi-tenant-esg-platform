@@ -13,7 +13,7 @@ export function RoleGuard({ allow, children }: { allow: Role[]; children: React.
   if (isLoading) return <LoadingSpinner />;
   if (!user || !allow.includes(user.role)) {
     return (
-      <div className="card p-6 text-sm text-ink-500">
+      <div className="card p-6 text-sm text-ink-500 dark:text-ink-400">
         You don&apos;t have access to this page.
       </div>
     );
