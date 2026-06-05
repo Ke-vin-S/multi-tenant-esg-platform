@@ -69,9 +69,7 @@ export default function AuditLedgerPage() {
                   <td className="px-4 py-3">
                     {e.evidenceUrl ? (
                       <a
-                        href={e.evidenceUrl.startsWith('local:')
-                          ? `/api/evidence/${encodeURIComponent(e.evidenceUrl.slice('local:'.length))}`
-                          : e.evidenceUrl}
+                        href={e.evidenceUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="text-brand-700 hover:underline focus-ring dark:text-brand-300"

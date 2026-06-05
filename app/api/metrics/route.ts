@@ -13,6 +13,7 @@ import { requireAuth, requireRole, UnauthorizedError } from '@/lib/auth';
 import { withTenantContext, globalPrisma } from '@/lib/prisma';
 import { calculateCO2e } from '@/lib/co2e';
 import { startOfFiscalYearUTC, startOfMonthUTC } from '@/lib/utils';
+import { presignEvidenceView } from '@/lib/s3';
 
 export async function GET(req: Request) {
   try {
@@ -31,8 +32,8 @@ export async function GET(req: Request) {
       }),
     );
 
-    return NextResponse.json({
-      entries: entries.map((e) => ({
+    const dtos = await Promise.all(
+      entries.map(async (e) => ({
         id: e.id,
         metricDefinitionId: e.metricDefinitionId,
         metricName: e.metricDefinition.name,
@@ -42,10 +43,14 @@ export async function GET(req: Request) {
         rawValue: e.rawValue,
         co2eKg: e.co2eKg,
         reportingMonth: e.reportingMonth.toISOString(),
-        evidenceUrl: e.evidenceUrl,
+        evidenceUrl: e.evidenceUrl
+          ? await presignEvidenceView(e.evidenceUrl, auth).catch(() => null)
+          : null,
         submittedAt: e.submittedAt.toISOString(),
       })),
-    });
+    );
+
+    return NextResponse.json({ entries: dtos });
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       return NextResponse.json({ error: err.message }, { status: 401 });

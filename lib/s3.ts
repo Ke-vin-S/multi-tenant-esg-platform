@@ -13,6 +13,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { mkdir, writeFile, readFile, stat } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
+import type { AuthContext } from './auth';
+import { UnauthorizedError } from './auth';
 
 const LOCAL_DIR = path.resolve(process.cwd(), 'tmp', 'evidence');
 
@@ -110,11 +112,21 @@ export async function readLocalEvidence(key: string): Promise<{ bytes: Buffer; s
   }
 }
 
-export async function presignEvidenceView(evidenceUrl: string): Promise<string> {
+export async function presignEvidenceView(evidenceUrl: string, auth: AuthContext): Promise<string> {
+  const key = evidenceUrl.startsWith('local:') ? evidenceUrl.slice('local:'.length) : evidenceUrl;
+
+  // key shape: "evidence/<tenantId>/..."
+  const tenantInKey = key.split('/')[1];
+  if (!tenantInKey) throw new Error('Malformed evidence key');
+
+  if (auth.role === 'SUBSIDIARY_OFFICER' && tenantInKey !== auth.tenantId) {
+    throw new UnauthorizedError('Evidence does not belong to your tenant');
+  }
+
   if (evidenceUrl.startsWith('local:')) {
-    const key = evidenceUrl.slice('local:'.length);
     return `/api/evidence/${encodeURIComponent(key)}`;
   }
+
   const bucket = process.env.AWS_S3_BUCKET;
   if (!bucket) throw new Error('AWS_S3_BUCKET not configured');
   return getSignedUrl(
