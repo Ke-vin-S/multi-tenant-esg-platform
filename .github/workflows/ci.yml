@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: lint · typecheck · test · build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: esg_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d esg_dev"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # esg_app is NON-superuser so RLS actually enforces in the test suite.
+      DATABASE_URL: postgresql://esg_app:password_app@localhost:5432/esg_dev
+      # Migrations need superuser to ALTER TABLE / create policies.
+      DIRECT_URL: postgresql://postgres:password@localhost:5432/esg_dev
+      DATABASE_URL_PRIVILEGED: postgresql://esg_privileged:password_privileged@localhost:5432/esg_dev
+      DEV_AUTH_BYPASS: "true"
+      DEV_SESSION_SECRET: "ci-only-secret-do-not-reuse"
+      DEV_S3_LOCAL: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Create DB roles (esg_app, esg_privileged)
+        env:
+          PGPASSWORD: password
+        run: psql -h localhost -U postgres -d esg_dev -v ON_ERROR_STOP=1 -f scripts/setup-roles.sql
+
+      - name: Apply Prisma migrations
+        run: npx prisma migrate deploy
+
+      - name: Grant role privileges on newly created tables
+        env:
+          PGPASSWORD: password
+        run: psql -h localhost -U postgres -d esg_dev -v ON_ERROR_STOP=1 -f scripts/setup-roles.sql
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Integration tests (RLS + API routes)
+        run: npm run test:integration
+
+      - name: Build
+        run: npm run build
