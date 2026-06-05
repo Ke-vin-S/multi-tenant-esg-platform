@@ -1,72 +1,53 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import {
-  applyTheme,
-  readPreference,
-  setPreference,
-  type ThemePreference,
-} from '@/lib/theme';
+import { setPreference } from '@/lib/theme';
 
 /**
- * Cycle button: System → Light → Dark → System …
+ * Two-state theme toggle.
  *
- * Shows the icon for the CURRENT preference, with the resolved icon as
- * a small dot if 'system'. Listens for OS theme changes when the
- * preference is 'system' so the page re-renders the icon accordingly.
+ * Default (no localStorage entry) follows the OS. The icon always shows
+ * the CURRENT theme — sun for light, moon for dark — and clicking flips
+ * to the other. After the first click the preference becomes explicit
+ * and is persisted in localStorage.
+ *
+ * The button observes the `dark` class on <html> so it stays in sync if
+ * the theme changes from anywhere else (e.g. OS change while in default
+ * 'system' mode).
  */
-const ORDER: ThemePreference[] = ['system', 'light', 'dark'];
-const LABEL: Record<ThemePreference, string> = {
-  system: 'System theme',
-  light: 'Light theme',
-  dark: 'Dark theme',
-};
-
 export function ThemeToggle({ className }: { className?: string }) {
-  const [pref, setPref] = useState<ThemePreference>('system');
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setPref(readPreference());
-
-    // Re-render the icon when the OS theme changes (only matters in 'system' mode).
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const onSystemChange = () => {
-      if (readPreference() === 'system') applyTheme('system');
-      // trigger re-render
-      setPref((p) => (p === 'system' ? 'system' : p));
-    };
-    mq.addEventListener('change', onSystemChange);
-    return () => mq.removeEventListener('change', onSystemChange);
+    const root = document.documentElement;
+    const read = () => setIsDark(root.classList.contains('dark'));
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
-  function cycle() {
-    const next = ORDER[(ORDER.indexOf(pref) + 1) % ORDER.length];
-    setPref(next);
-    setPreference(next);
+  function toggle() {
+    setPreference(isDark ? 'light' : 'dark');
   }
+
+  const nextLabel = isDark ? 'light' : 'dark';
 
   return (
     <button
       type="button"
-      onClick={cycle}
-      title={`Theme: ${LABEL[pref]} (click to switch)`}
-      aria-label={`Switch theme — currently ${LABEL[pref]}`}
+      onClick={toggle}
+      title={`Switch to ${nextLabel} mode`}
+      aria-label={`Switch to ${nextLabel} mode`}
       className={cn(
         'inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ink-200 bg-white text-ink-700 transition-colors hover:bg-ink-50 focus-ring',
         'dark:border-ink-700 dark:bg-ink-900 dark:text-ink-200 dark:hover:bg-ink-800',
         className,
       )}
     >
-      <Icon pref={pref} />
+      {isDark ? <MoonIcon /> : <SunIcon />}
     </button>
   );
-}
-
-function Icon({ pref }: { pref: ThemePreference }) {
-  // 16x16 stroke-only SVGs so they inherit currentColor in both themes.
-  if (pref === 'light') return <SunIcon />;
-  if (pref === 'dark') return <MoonIcon />;
-  return <SystemIcon />;
 }
 
 function SunIcon() {
@@ -82,15 +63,6 @@ function MoonIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  );
-}
-
-function SystemIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="12" rx="2" />
-      <path d="M8 20h8M12 16v4" />
     </svg>
   );
 }
