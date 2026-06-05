@@ -288,6 +288,8 @@ The integration suite is the load-bearing one — it proves RLS at the actual Po
 - **Server-component layouts can't accept render-prop children from client components.** The Sidebar reads `useAuth()` internally instead.
 - **EF lookup falls back to `::DEFAULT`** — never throws. If a region has no entry, you still get a number.
 - **`co2eKg` is `null` for non-carbon metrics** (water, headcount, incidents) — aggregation queries must filter on `co2eKg IS NOT NULL`.
+- **Brave + `npm run dev`**: Brave Shields block `eval()` on localhost, and Next 14 dev hardcodes `eval-source-map`. Symptom: page renders but no JS runs, no `/api/auth/dev-login` fetch fires. Fix: lion icon → Shields = Down on localhost, or use `npm run build && npm run start`, or use Chrome/Firefox. Cannot be overridden in `next.config.mjs`.
+- **Hard navigation after login/logout.** `router.push` + `router.refresh` races the `Set-Cookie` write; middleware on the next request can miss the cookie and bounce you back. Use `window.location.assign(...)` instead.
 
 ---
 

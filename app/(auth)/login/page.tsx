@@ -1,8 +1,6 @@
 'use client';
-import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Card, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { useEffect, useState } from 'react';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
@@ -30,22 +28,21 @@ function dashboardForRole(role: DemoUser['role']): string {
   return '/overview';
 }
 
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<LoadingSpinner label="Loading…" />}>
-      <LoginInner />
-    </Suspense>
-  );
+// Read ?next= without useSearchParams so we don't have to coordinate the
+// Suspense boundary. Safe to call on the client only.
+function readNext(): string | null {
+  if (typeof window === 'undefined') return null;
+  return new URLSearchParams(window.location.search).get('next');
 }
 
-function LoginInner() {
-  const params = useSearchParams();
-  const next = params.get('next');
+export default function LoginPage() {
   const [users, setUsers] = useState<DemoUser[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyEmail, setBusyEmail] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('[login] hydrated — fetching demo users');
     fetch('/api/auth/dev-login', { credentials: 'include' })
       .then(async (r) => {
         if (r.status === 404) {
@@ -53,9 +50,13 @@ function LoginInner() {
           return;
         }
         const j = await r.json();
-        setUsers(j.users);
+        setUsers(j.users ?? []);
       })
-      .catch(() => setError('Failed to load demo users'));
+      .catch((e) => {
+        // eslint-disable-next-line no-console
+        console.error('[login] failed to load demo users', e);
+        setError('Failed to load demo users');
+      });
   }, []);
 
   async function signIn(email: string, role: DemoUser['role']) {
@@ -71,10 +72,8 @@ function LoginInner() {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error ?? 'Sign-in failed');
       }
-      // Hard navigation forces middleware to see the just-set cookie on the
-      // next request. router.push + router.refresh races the cookie write
-      // and can bounce the user back to /login.
-      window.location.assign(next || dashboardForRole(role));
+      // Hard navigation so middleware sees the just-set cookie immediately.
+      window.location.assign(readNext() ?? dashboardForRole(role));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in failed');
       setBusyEmail(null);
@@ -95,9 +94,15 @@ function LoginInner() {
         </div>
       )}
 
-      {!users && !error && <LoadingSpinner label="Loading demo users…" />}
+      {users === null && !error && <LoadingSpinner label="Loading demo users…" />}
 
-      {users && (
+      {users && users.length === 0 && !error && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          No demo users found. Run <code>npm run db:seed</code> to populate them.
+        </div>
+      )}
+
+      {users && users.length > 0 && (
         <div className="space-y-2">
           {users.map((u) => (
             <button
