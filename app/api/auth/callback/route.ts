@@ -31,9 +31,17 @@ export async function GET(req: Request) {
     redirect_uri: redirectUri,
   });
 
-  const tokenRes = await fetch(`https://${domain}/oauth2/token`, {
+  const clientSecret = process.env.COGNITO_CLIENT_SECRET;
+  const headers: Record<string, string> = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  if (clientSecret) {
+    // Cognito requires HTTP Basic Auth when the app client has a secret
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    headers['Authorization'] = `Basic ${credentials}`;
+  }
+
+  const tokenRes = await fetch(`${domain}/oauth2/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers,
     body,
   });
 

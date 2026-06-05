@@ -4,13 +4,29 @@
  * Creates:
  *   - 3 tenants (LOLC Finance Cambodia / Browns Plantations / Eden Resorts Maldives)
  *   - Metric definitions per agent_docs/sector-profiles.md
- *   - 3 demo users (one per role) mapped to Cognito IDs that the dev-auth bypass uses
+ *   - Demo users in the DB (and optionally in Cognito with --cognito flag)
  *   - 12 months of plausible historical MetricEntry data per tenant so dashboards
  *     have something to render on first load
  *
+ * Usage:
+ *   npx prisma db seed                  → DB only, uses dev-* cognitoId stubs
+ *   npx prisma db seed -- --cognito     → also provisions real Cognito users
+ *
  * Seed uses globalPrisma (RLS bypass) because it inserts for many tenants at once.
  */
+import { config } from 'dotenv';
+import { existsSync } from 'fs';
+if (existsSync('.env.local')) config({ path: '.env.local', override: true });
+else config(); // falls back to .env in prod/CI
+
 import { PrismaClient, SectorProfile, Role, EmissionScope } from '@prisma/client';
+import {
+  CognitoIdentityProviderClient,
+  AdminCreateUserCommand,
+  AdminSetUserPasswordCommand,
+  AdminDeleteUserCommand,
+  ListUsersCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
 import { calculateCO2e } from '../lib/co2e';
 
 const prisma = new PrismaClient({
@@ -18,6 +34,72 @@ const prisma = new PrismaClient({
     db: { url: process.env.DATABASE_URL_PRIVILEGED ?? process.env.DATABASE_URL },
   },
 });
+
+const WITH_COGNITO = process.argv.includes('--cognito');
+
+type DemoUser = {
+  email: string;
+  role: Role;
+  tenantId: string;
+  devCognitoId: string; // used when --cognito is not passed
+};
+
+async function provisionCognitoUsers(users: DemoUser[]): Promise<Map<string, string>> {
+  const userPoolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
+  const region = process.env.COGNITO_REGION ?? 'ap-southeast-1';
+  const tempPassword = process.env.COGNITO_SEED_PASSWORD ?? 'SeedTest1!';
+
+  if (!userPoolId) throw new Error('NEXT_PUBLIC_COGNITO_USER_POOL_ID is not set');
+
+  const client = new CognitoIdentityProviderClient({ region });
+  const emailToSub = new Map<string, string>();
+
+  for (const user of users) {
+    // Delete existing user first so re-running seed is idempotent
+    try {
+      const existing = await client.send(new ListUsersCommand({
+        UserPoolId: userPoolId,
+        Filter: `email = "${user.email}"`,
+        Limit: 1,
+      }));
+      if (existing.Users?.length) {
+        await client.send(new AdminDeleteUserCommand({
+          UserPoolId: userPoolId,
+          Username: existing.Users[0].Username!,
+        }));
+        console.log(`  deleted existing Cognito user: ${user.email}`);
+      }
+    } catch {
+      // ignore — user may not exist
+    }
+
+    const created = await client.send(new AdminCreateUserCommand({
+      UserPoolId: userPoolId,
+      Username: user.email,
+      MessageAction: 'SUPPRESS', // don't send welcome email
+      TemporaryPassword: tempPassword,
+      UserAttributes: [
+        { Name: 'email',              Value: user.email },
+        { Name: 'email_verified',     Value: 'true' },
+        { Name: 'custom:role',        Value: user.role },
+        { Name: 'custom:tenant_id',   Value: user.tenantId },
+      ],
+    }));
+
+    await client.send(new AdminSetUserPasswordCommand({
+      UserPoolId: userPoolId,
+      Username: user.email,
+      Password: tempPassword,
+      Permanent: true,
+    }));
+
+    const sub = created.User!.Attributes!.find(a => a.Name === 'sub')!.Value!;
+    emailToSub.set(user.email, sub);
+    console.log(`  created Cognito user: ${user.email}  sub=${sub}`);
+  }
+
+  return emailToSub;
+}
 
 type DefSeed = {
   metricType: string;
@@ -90,15 +172,30 @@ async function main() {
   }
 
   console.log('Creating demo users…');
-  // cognitoId values double as the dev-auth-bypass subject identifiers.
+
+  const demoUsers: DemoUser[] = [
+    { email: 'subsidiary_officer@test.com', role: 'SUBSIDIARY_OFFICER', tenantId: browns.id, devCognitoId: 'dev-officer-browns' },
+    { email: 'officer_lolc@test.com',       role: 'SUBSIDIARY_OFFICER', tenantId: lolc.id,   devCognitoId: 'dev-officer-lolc'   },
+    { email: 'officer_eden@test.com',       role: 'SUBSIDIARY_OFFICER', tenantId: eden.id,   devCognitoId: 'dev-officer-eden'   },
+    { email: 'analyst@test.com',            role: 'CORPORATE_ANALYST',  tenantId: lolc.id,   devCognitoId: 'dev-analyst'        },
+    { email: 'admin@test.com',              role: 'GLOBAL_ADMIN',       tenantId: lolc.id,   devCognitoId: 'dev-admin'          },
+  ];
+
+  let cognitoSubs: Map<string, string> = new Map();
+  if (WITH_COGNITO) {
+    console.log('  provisioning Cognito users…');
+    cognitoSubs = await provisionCognitoUsers(demoUsers);
+  } else {
+    console.log('  skipping Cognito (pass --cognito to provision real users)');
+  }
+
   await prisma.user.createMany({
-    data: [
-      { cognitoId: 'dev-officer-browns', email: 'subsidiary_officer@test.com', tenantId: browns.id, role: 'SUBSIDIARY_OFFICER' as Role },
-      { cognitoId: 'dev-officer-lolc',   email: 'officer_lolc@test.com',       tenantId: lolc.id,   role: 'SUBSIDIARY_OFFICER' as Role },
-      { cognitoId: 'dev-officer-eden',   email: 'officer_eden@test.com',       tenantId: eden.id,   role: 'SUBSIDIARY_OFFICER' as Role },
-      { cognitoId: 'dev-analyst',        email: 'analyst@test.com',            tenantId: lolc.id,   role: 'CORPORATE_ANALYST' as Role },
-      { cognitoId: 'dev-admin',          email: 'admin@test.com',              tenantId: lolc.id,   role: 'GLOBAL_ADMIN' as Role },
-    ],
+    data: demoUsers.map(u => ({
+      cognitoId: cognitoSubs.get(u.email) ?? u.devCognitoId,
+      email:     u.email,
+      tenantId:  u.tenantId,
+      role:      u.role,
+    })),
   });
 
   console.log('Creating 12 months of historical metric entries…');

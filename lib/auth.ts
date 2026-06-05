@@ -1,18 +1,4 @@
-/**
- * Auth boundary for the PoC.
- *
- * In production: verify the Cognito ID-token JWT against the user pool's JWKS
- * and pull `custom:tenant_id` / `custom:role` from the claims.
- *
- * In local dev (DEV_AUTH_BYPASS=true): accept a signed local session cookie
- * minted by /api/auth/dev-login. The session payload carries the same
- * three fields, so downstream code is identical.
- *
- * NEVER trust client-supplied tenantId or role — both must come from a
- * verified token / signed session.
- */
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
-import { verifyDevSession, type DevSession } from './dev-session';
 
 export type AuthRole = 'SUBSIDIARY_OFFICER' | 'CORPORATE_ANALYST' | 'GLOBAL_ADMIN';
 
@@ -38,17 +24,10 @@ function getVerifier() {
   if (!userPoolId || !clientId) {
     throw new Error('Cognito env vars missing (NEXT_PUBLIC_COGNITO_USER_POOL_ID / NEXT_PUBLIC_COGNITO_CLIENT_ID)');
   }
-  cachedVerifier = CognitoJwtVerifier.create({
-    userPoolId,
-    tokenUse: 'id',
-    clientId,
-  });
+  cachedVerifier = CognitoJwtVerifier.create({ userPoolId, tokenUse: 'id', clientId });
   return cachedVerifier;
 }
 
-/**
- * Verify a Cognito ID-token JWT against the pool JWKS.
- */
 export async function verifyCognitoToken(token: string): Promise<AuthContext> {
   const verifier = getVerifier();
   const payload = await verifier.verify(token);
@@ -65,55 +44,20 @@ export async function verifyCognitoToken(token: string): Promise<AuthContext> {
   };
 }
 
-function devBypassEnabled(): boolean {
-  return process.env.DEV_AUTH_BYPASS === 'true';
-}
-
-function fromDevSession(s: DevSession): AuthContext {
-  return {
-    tenantId: s.tenantId,
-    role: s.role as AuthRole,
-    cognitoSub: s.sub,
-    email: s.email,
-  };
-}
-
-/**
- * Extract the auth context from a Next.js request.
- *
- * Resolution order:
- *   1. `Authorization: Bearer <id_token>` → Cognito verification (production path).
- *   2. `id_token` cookie → Cognito verification (web app path).
- *   3. `esg_dev_session` cookie → local signed-session verification (dev only).
- *
- * Throws UnauthorizedError on any failure — callers map to a 401.
- */
 export async function requireAuth(req: Request): Promise<AuthContext> {
   const bearer = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
   const cookieHeader = req.headers.get('cookie') ?? '';
   const cookies = parseCookies(cookieHeader);
 
-  const cognitoToken = bearer || cookies['id_token'];
-  if (cognitoToken) {
-    try {
-      return await verifyCognitoToken(cognitoToken);
-    } catch (err) {
-      // Fall through to dev session in dev mode; in prod, fail closed.
-      if (!devBypassEnabled()) {
-        throw new UnauthorizedError('Invalid Cognito token');
-      }
-    }
-  }
+  const token = bearer || cookies['id_token'];
+  if (!token) throw new UnauthorizedError();
 
-  if (devBypassEnabled()) {
-    const devCookie = cookies['esg_dev_session'];
-    if (devCookie) {
-      const session = await verifyDevSession(devCookie);
-      if (session) return fromDevSession(session);
-    }
+  try {
+    return await verifyCognitoToken(token);
+  } catch (err) {
+    if (err instanceof UnauthorizedError) throw err;
+    throw new UnauthorizedError('Invalid Cognito token');
   }
-
-  throw new UnauthorizedError();
 }
 
 export function requireRole(ctx: AuthContext, allowed: AuthRole[]): void {
