@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAuth, UnauthorizedError } from '@/lib/auth';
 import { globalPrisma } from '@/lib/prisma';
+import logger from '@/lib/logger';
 
 export async function GET(req: Request) {
   try {
@@ -27,6 +28,7 @@ export async function GET(req: Request) {
     if (err instanceof UnauthorizedError) {
       return NextResponse.json({ error: err.message }, { status: 401 });
     }
-    throw err;
+    logger.error('auth/me failed', { error: err instanceof Error ? err.message : String(err) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
