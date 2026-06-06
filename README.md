@@ -71,17 +71,18 @@ No AWS provisioning required. Sign in at `/login` as any seeded persona (one-cli
 │       └── evidence/[key]     Upload + secure read
 │
 ├── lib/
-│   ├── prisma.ts              Singleton + withTenantContext + globalPrisma
+│   ├── prisma.ts              Singleton + withTenantContext + withGlobalContext + globalPrisma
 │   ├── auth.ts                requireAuth, requireRole, Cognito verifier
 │   ├── dev-session.ts         HMAC-signed local session (dev only)
 │   ├── emission-factors.ts    EF map by metricType::region
 │   ├── co2e.ts                calculateCO2e
+│   ├── fetcher.ts             SWR fetcher with centralised 401 → login redirect
 │   ├── s3.ts                  Upload + local-fallback storage
 │   └── utils.ts               cn, formatters, date helpers
 │
 ├── components/
 │   ├── ui/                    Button, Card, Badge, KpiCard, ComplianceBadge, Input, EmptyState, LoadingSpinner
-│   ├── layout/                Sidebar, Navbar, RoleGuard
+│   ├── layout/                Sidebar, Navbar, RoleGuard, AuthGuard, ThemeSync
 │   ├── forms/                 DynamicMetricForm, MonthPicker, FileUploadZone
 │   └── charts/                EmissionLineChart, ResourceDonutChart, SectorBarChart, SubsidiaryLeaderboard
 │
@@ -126,12 +127,19 @@ await withTenantContext(auth.tenantId, (tx) =>
 ```
 
 ```ts
-// Analyst/Admin (cross-tenant) traffic uses a different client:
-await globalPrisma.metricEntry.groupBy({ by: ['tenantId'], _sum: { co2eKg: true }})
-// → connects as `esg_privileged` which has `app.bypass_rls = 'on'` at role level
+// Analyst/Admin (cross-tenant) traffic goes through withGlobalContext:
+await withGlobalContext(async (tx) => {
+  const tenants = await tx.tenant.findMany({ ... });
+  const entries = await tx.metricEntry.findMany({ where: { tenantId: { in: tenantIds } } });
+  return { tenants, entries };
+});
+// → runs inside a $transaction, sets set_config('app.bypass_rls','on',true) before queries
+// → RLS policy checks the bypass flag and allows cross-tenant reads
 ```
 
 `DATABASE_URL` MUST connect as a non-superuser (we use `esg_app`). Postgres superusers bypass RLS unconditionally — the integration tests catch this.
+
+> **PgBouncer note:** `ALTER ROLE esg_privileged SET app.bypass_rls = 'on'` is NOT reliable when using PgBouncer in transaction-pooling mode (e.g. Neon). Session-level role settings are silently lost. Always use the `withGlobalContext` wrapper which calls `set_config(...)` inside the transaction itself.
 
 ---
 
@@ -248,6 +256,14 @@ npm run db:studio         # prisma studio
 
 **Heads-up:** the integration tests wipe the DB between suites. Run `npm run db:seed` after `npm run test:all` to restore the demo personas.
 
+**Cognito re-seed:** if you drop and re-create tenants (new CUIDs), the `custom:tenant_id` attribute on Cognito users goes stale. Re-sync with:
+
+```bash
+npx prisma db seed -- --cognito
+```
+
+This updates each Cognito user's `custom:tenant_id` to match the current seeded IDs. Without this, `/api/auth/me` returns 404 for all users after a fresh seed.
+
 ---
 
 ## Testing
@@ -280,6 +296,27 @@ The integration suite is the load-bearing one — it proves RLS at the actual Po
 
 ---
 
+## Deploying to Vercel + Neon
+
+`vercel.json` locks the build command to `npm run build` so Vercel never runs `prisma migrate deploy` in the build container. Build containers use ephemeral IPs that may not match your database allowlist.
+
+**One-time setup:**
+
+1. Set **Neon IP allowlist → "No restrictions"** (or allowlist Vercel's function IPs). Without this every API call fails with `P1001 Can't reach database server`.
+2. Run migrations against your Neon database manually before first deploy:
+   ```bash
+   DATABASE_URL="postgresql://..." npx prisma migrate deploy
+   ```
+3. Seed demo data (including Cognito sync if applicable):
+   ```bash
+   DATABASE_URL="postgresql://..." npx prisma db seed -- --cognito
+   ```
+4. Set all required environment variables in the Vercel dashboard (see `.env.example`).
+
+**Cookie `secure` flag:** The `id_token` cookie is set `Secure` only when the `VERCEL` environment variable is present (automatically set by Vercel). It is NOT gated on `NODE_ENV=production`, so `npm run build && npm run start` on localhost sends the cookie over HTTP without the `Secure` flag.
+
+---
+
 ## Gotchas (learned the hard way)
 
 - **Postgres superusers bypass RLS** even with `FORCE ROW LEVEL SECURITY`. Use `esg_app` (non-superuser) for `DATABASE_URL`. The integration tests catch this.
@@ -290,6 +327,9 @@ The integration suite is the load-bearing one — it proves RLS at the actual Po
 - **`co2eKg` is `null` for non-carbon metrics** (water, headcount, incidents) — aggregation queries must filter on `co2eKg IS NOT NULL`.
 - **Brave + `npm run dev`**: Brave Shields block `eval()` on localhost, and Next 14 dev hardcodes `eval-source-map`. Symptom: page renders but no JS runs, no `/api/auth/dev-login` fetch fires. Fix: lion icon → Shields = Down on localhost, or use `npm run build && npm run start`, or use Chrome/Firefox. Cannot be overridden in `next.config.mjs`.
 - **Hard navigation after login/logout.** `router.push` + `router.refresh` races the `Set-Cookie` write; middleware on the next request can miss the cookie and bounce you back. Use `window.location.assign(...)` instead.
+- **PgBouncer transaction mode drops role-level session vars.** `ALTER ROLE esg_privileged SET app.bypass_rls = 'on'` is silently lost per connection checkout. Always use `withGlobalContext()` which calls `set_config('app.bypass_rls','on',true)` inside the transaction. Applies to Neon and any other PgBouncer-fronted pool.
+- **`Script beforeInteractive` with inline content does NOT block paint in App Router.** It runs after React hydration, not before the first paint. For a flash-of-wrong-theme fix, use `<script dangerouslySetInnerHTML>` inside `<head>` (render-blocking) and pair it with a `useLayoutEffect` safety net in `ThemeSync`. See `app/layout.tsx` and `components/layout/ThemeSync.tsx`.
+- **Theme system is two-layer by design.** The inline `<script>` in `<head>` sets the `dark` class before paint. `ThemeSync` re-applies the correct theme via `useLayoutEffect` after React hydrates (catches any mismatch) and also subscribes to live OS changes. Removing either layer causes a flash or a missed OS change.
 
 ---
 
