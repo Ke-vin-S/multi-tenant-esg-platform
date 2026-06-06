@@ -10,11 +10,7 @@ import { RoleGuard } from '@/components/layout/RoleGuard';
 import { formatNumber } from '@/lib/utils';
 import type { SectorProfile } from '@/types';
 
-const fetcher = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
-    if (!r.ok) throw new Error('Failed');
-    return r.json();
-  });
+import { authFetcher } from '@/lib/fetcher';
 
 const VALID: SectorProfile[] = ['FINANCIAL', 'AGRICULTURE', 'LEISURE'];
 
@@ -35,7 +31,7 @@ function SectorInner({ sector }: { sector: SectorProfile }) {
     perTenant: Array<{ id: string; name: string; sectorProfile: SectorProfile; region: string; totalCo2eKg: number }>;
     perScope: Array<{ scope: string; totalCo2eKg: number }>;
     perMonth: Array<{ month: string; totalCo2eKg: number }>;
-  }>(`/api/metrics/aggregate?sector=${sector}`, fetcher);
+  }>(`/api/metrics/aggregate?sector=${sector}`, authFetcher);
 
   if (isLoading) return <LoadingSpinner />;
   if (!data) return null;

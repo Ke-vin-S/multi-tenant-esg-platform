@@ -12,15 +12,11 @@ import type { MetricEntryDTO } from '@/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
-const fetcher = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
-    if (!r.ok) throw new Error('Failed');
-    return r.json();
-  });
+import { authFetcher } from '@/lib/fetcher';
 
 export default function OverviewPage() {
   const { user } = useAuth();
-  const { data, isLoading } = useSWR<{ entries: MetricEntryDTO[] }>('/api/metrics', fetcher);
+  const { data, isLoading } = useSWR<{ entries: MetricEntryDTO[] }>('/api/metrics', authFetcher);
 
   if (isLoading) return <LoadingSpinner />;
   const entries = data?.entries ?? [];

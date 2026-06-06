@@ -7,14 +7,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { formatNumber, monthLabel } from '@/lib/utils';
 import type { MetricEntryDTO } from '@/types';
 
-const fetcher = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
-    if (!r.ok) throw new Error('Failed');
-    return r.json();
-  });
+import { authFetcher } from '@/lib/fetcher';
 
 export default function AuditLedgerPage() {
-  const { data, isLoading } = useSWR<{ entries: MetricEntryDTO[] }>('/api/metrics', fetcher);
+  const { data, isLoading } = useSWR<{ entries: MetricEntryDTO[] }>('/api/metrics', authFetcher);
 
   if (isLoading) return <LoadingSpinner />;
   const entries = data?.entries ?? [];

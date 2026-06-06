@@ -16,11 +16,7 @@ interface TenantRow {
   recentTotalCo2eKg: number;
 }
 
-const fetcher = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
-    if (!r.ok) throw new Error('Failed');
-    return r.json();
-  });
+import { authFetcher } from '@/lib/fetcher';
 
 export default function TenantsPage() {
   return (
@@ -31,7 +27,7 @@ export default function TenantsPage() {
 }
 
 function Inner() {
-  const { data, isLoading } = useSWR<{ tenants: TenantRow[] }>('/api/tenants', fetcher);
+  const { data, isLoading } = useSWR<{ tenants: TenantRow[] }>('/api/tenants', authFetcher);
   if (isLoading) return <LoadingSpinner />;
   const tenants = data?.tenants ?? [];
 

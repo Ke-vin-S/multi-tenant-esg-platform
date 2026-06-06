@@ -18,11 +18,7 @@ interface AggregateResponse {
   perMonth: Array<{ month: string; totalCo2eKg: number }>;
 }
 
-const fetcher = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
-    if (!r.ok) throw new Error('Failed');
-    return r.json();
-  });
+import { authFetcher } from '@/lib/fetcher';
 
 export default function GlobalPage() {
   return (
@@ -33,7 +29,7 @@ export default function GlobalPage() {
 }
 
 function GlobalInner() {
-  const { data, isLoading } = useSWR<AggregateResponse>('/api/metrics/aggregate', fetcher);
+  const { data, isLoading } = useSWR<AggregateResponse>('/api/metrics/aggregate', authFetcher);
   if (isLoading) return <LoadingSpinner />;
   if (!data) return null;
 
