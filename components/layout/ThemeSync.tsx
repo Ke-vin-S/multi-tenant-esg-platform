@@ -1,14 +1,24 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { readPreference, applyTheme } from '@/lib/theme';
 
+// useLayoutEffect on the client fires after React commits but before the
+// browser paints — perfect for fixing any theme mismatch without a flash.
+// On the server (SSR pass) fall back to useEffect which is a no-op there.
+const useSafeLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 /**
- * Mounts once in the root layout. Subscribes to the OS prefers-color-scheme
- * media query and re-applies the theme whenever it changes — but only when
- * the user hasn't pinned an explicit light/dark preference in localStorage.
- * Works alongside the inline THEME_INIT_SCRIPT which handles the initial paint.
+ * Mounts once in the root layout.
+ * - On mount: re-applies the stored/system theme in case the inline script
+ *   was overridden during React hydration.
+ * - While mounted: listens for live OS preference changes and updates
+ *   when no explicit preference is pinned in localStorage.
  */
 export function ThemeSync() {
+  useSafeLayoutEffect(() => {
+    applyTheme(readPreference());
+  }, []);
+
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     function onSystemChange() {
@@ -17,5 +27,6 @@ export function ThemeSync() {
     mq.addEventListener('change', onSystemChange);
     return () => mq.removeEventListener('change', onSystemChange);
   }, []);
+
   return null;
 }

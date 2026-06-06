@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Script from 'next/script';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import { ThemeSync } from '@/components/layout/ThemeSync';
 import './globals.css';
@@ -15,11 +14,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <head />
+      <head>
+        {/* Render-blocking inline script — runs before first paint on every SSR
+            response. Sets the `dark` class so there is no flash of wrong theme. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body>
-        {/* beforeInteractive runs before React hydrates — guaranteed by Next.js
-            on both SSR and streaming, works on Vercel edge and Node runtimes. */}
-        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <ThemeSync />
         {children}
       </body>
