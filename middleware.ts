@@ -31,8 +31,16 @@ function decodeRole(req: NextRequest): string | null {
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Stamp every request with a correlation ID so logs can be joined.
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-request-id', requestId);
+
   if (!PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return NextResponse.next();
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    res.headers.set('x-request-id', requestId);
+    return res;
   }
 
   if (!req.cookies.get('id_token')?.value) {
@@ -52,7 +60,10 @@ export function middleware(req: NextRequest) {
   if (isGlobalOnly && role !== 'CORPORATE_ANALYST' && role !== 'GLOBAL_ADMIN') {
     return NextResponse.redirect(new URL('/overview', req.url));
   }
-  return NextResponse.next();
+
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
+  res.headers.set('x-request-id', requestId);
+  return res;
 }
 
 export const config = {

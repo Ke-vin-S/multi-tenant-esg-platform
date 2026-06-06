@@ -1,4 +1,5 @@
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import logger from './logger';
 
 export type AuthRole = 'SUBSIDIARY_OFFICER' | 'CORPORATE_ANALYST' | 'GLOBAL_ADMIN';
 
@@ -50,18 +51,26 @@ export async function requireAuth(req: Request): Promise<AuthContext> {
   const cookies = parseCookies(cookieHeader);
 
   const token = bearer || cookies['id_token'];
-  if (!token) throw new UnauthorizedError();
+  if (!token) {
+    logger.warn('auth: no token in request', { path: new URL(req.url).pathname });
+    throw new UnauthorizedError();
+  }
 
   try {
     return await verifyCognitoToken(token);
   } catch (err) {
     if (err instanceof UnauthorizedError) throw err;
+    logger.warn('auth: invalid Cognito token', {
+      path: new URL(req.url).pathname,
+      error: err instanceof Error ? err.message : String(err),
+    });
     throw new UnauthorizedError('Invalid Cognito token');
   }
 }
 
 export function requireRole(ctx: AuthContext, allowed: AuthRole[]): void {
   if (!allowed.includes(ctx.role)) {
+    logger.warn('auth: role denied', { role: ctx.role, allowed, tenantId: ctx.tenantId });
     throw new UnauthorizedError(`Role ${ctx.role} not permitted`);
   }
 }

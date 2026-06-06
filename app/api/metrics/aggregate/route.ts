@@ -12,9 +12,12 @@ import { NextResponse } from 'next/server';
 import { requireAuth, requireRole, UnauthorizedError } from '@/lib/auth';
 import { globalPrisma } from '@/lib/prisma';
 import { startOfFiscalYearUTC } from '@/lib/utils';
+import { requestLogger } from '@/lib/logger';
 import type { SectorProfile, EmissionScope } from '@prisma/client';
 
 export async function GET(req: Request) {
+  const log = requestLogger(req, { route: 'GET /api/metrics/aggregate' });
+  const start = Date.now();
   try {
     const auth = await requireAuth(req);
     requireRole(auth, ['CORPORATE_ANALYST', 'GLOBAL_ADMIN']);
@@ -23,6 +26,8 @@ export async function GET(req: Request) {
     const sectorParam = url.searchParams.get('sector') as SectorProfile | null;
     const since = url.searchParams.get('since');
     const sinceDate = since ? new Date(since) : startOfFiscalYearUTC();
+
+    log.info('aggregate query', { role: auth.role, sector: sectorParam ?? 'all', since: sinceDate.toISOString() });
 
     const tenants = await globalPrisma.tenant.findMany({
       where: sectorParam ? { sectorProfile: sectorParam } : undefined,
@@ -75,6 +80,13 @@ export async function GET(req: Request) {
 
     const totalCo2eKg = tenantSummaries.reduce((acc, t) => acc + t.totalCo2eKg, 0);
 
+    log.info('aggregate ok', {
+      role: auth.role,
+      tenantCount: tenantSummaries.length,
+      entryCount: entries.length,
+      totalCo2eKg,
+      durationMs: Date.now() - start,
+    });
     return NextResponse.json({
       totalCo2eKg,
       perTenant: tenantSummaries,
@@ -88,6 +100,7 @@ export async function GET(req: Request) {
     if (err instanceof UnauthorizedError) {
       return NextResponse.json({ error: err.message }, { status: 401 });
     }
-    throw err;
+    log.error('aggregate failed', { error: err instanceof Error ? err.message : String(err) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
