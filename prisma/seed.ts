@@ -208,28 +208,30 @@ async function main() {
     });
     const rng = rand(tenant.id.charCodeAt(0) + tenant.id.charCodeAt(1));
 
+    // Build all rows first, then insert in one batched transaction with RLS bypass.
+    const rows: { tenantId: string; metricDefinitionId: string; rawValue: number; unit: string; co2eKg: number | null; reportingMonth: Date }[] = [];
     for (let monthsAgo = 11; monthsAgo >= 0; monthsAgo--) {
       const month = new Date(Date.UTC(firstOfThisMonth.getUTCFullYear(), firstOfThisMonth.getUTCMonth() - monthsAgo, 1));
-
       for (const def of defs) {
         const baseline = baselineFor(def.metricType, tenant.sectorProfile);
         const seasonalSwing = 1 + 0.15 * Math.sin((monthsAgo / 12) * Math.PI * 2);
-        const noise = 0.85 + rng() * 0.3; // ±15 %
+        const noise = 0.85 + rng() * 0.3;
         const rawValue = Math.round(baseline * seasonalSwing * noise * 100) / 100;
-        const co2e = calculateCO2e(rawValue, def.metricType, tenant.region);
-
-        await prisma.metricEntry.create({
-          data: {
-            tenantId: tenant.id,
-            metricDefinitionId: def.id,
-            rawValue,
-            unit: def.unit,
-            co2eKg: co2e,
-            reportingMonth: month,
-          },
+        rows.push({
+          tenantId: tenant.id,
+          metricDefinitionId: def.id,
+          rawValue,
+          unit: def.unit,
+          co2eKg: calculateCO2e(rawValue, def.metricType, tenant.region),
+          reportingMonth: month,
         });
       }
     }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+      await tx.metricEntry.createMany({ data: rows });
+    });
   }
 
   console.log('Done.');
