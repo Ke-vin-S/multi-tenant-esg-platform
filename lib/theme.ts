@@ -60,6 +60,6 @@ export const THEME_INIT_SCRIPT = `
     var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     var dark = stored === 'dark' || (stored !== 'light' && systemDark);
     if (dark) document.documentElement.classList.add('dark');
-  } catch (e) { /* localStorage may throw in private mode — ignore */ }
+  } catch (e) { /* ignore: localStorage unavailable in private mode */ }
 })();
 `;
