@@ -37,6 +37,8 @@ export async function POST(req: Request) {
     if (err instanceof UnauthorizedError) {
       return NextResponse.json({ error: err.message }, { status: 401 });
     }
-    throw err;
+    console.error('[api/evidence]', err);
+    const message = err instanceof Error ? err.message : 'Upload failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
