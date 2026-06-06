@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { RoleGuard } from '@/components/layout/RoleGuard';
 import { formatNumber } from '@/lib/utils';
 import type { SectorProfile, EmissionScope } from '@/types';
+import { authFetcher } from '@/lib/fetcher';
 
 interface AggregateResponse {
   totalCo2eKg: number;
@@ -17,8 +18,6 @@ interface AggregateResponse {
   perSector: Array<{ sector: SectorProfile; totalCo2eKg: number }>;
   perMonth: Array<{ month: string; totalCo2eKg: number }>;
 }
-
-import { authFetcher } from '@/lib/fetcher';
 
 export default function GlobalPage() {
   return (

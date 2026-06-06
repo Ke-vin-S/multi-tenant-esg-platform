@@ -65,7 +65,8 @@ export async function POST(req: Request) {
       sameSite: 'lax',
       path: '/',
       maxAge: result.AuthenticationResult?.ExpiresIn ?? 3600,
-      secure: process.env.NODE_ENV === 'production',
+      // secure only on actual HTTPS deployments — not localhost npm start
+      secure: !!process.env.VERCEL,
     });
     return res;
   } catch (err: unknown) {

@@ -6,6 +6,7 @@ import { ComplianceBadge } from '@/components/ui/ComplianceBadge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { RoleGuard } from '@/components/layout/RoleGuard';
 import { formatNumber } from '@/lib/utils';
+import { authFetcher } from '@/lib/fetcher';
 
 interface TenantRow {
   id: string;
@@ -15,8 +16,6 @@ interface TenantRow {
   status: 'submitted' | 'late' | 'missing';
   recentTotalCo2eKg: number;
 }
-
-import { authFetcher } from '@/lib/fetcher';
 
 export default function TenantsPage() {
   return (

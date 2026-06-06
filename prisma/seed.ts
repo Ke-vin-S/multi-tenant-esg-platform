@@ -145,10 +145,13 @@ function rand(seed: number) {
 
 async function main() {
   console.log('Wiping demo data…');
-  await prisma.metricEntry.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.metricDefinition.deleteMany();
-  await prisma.tenant.deleteMany();
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+    await tx.metricEntry.deleteMany();
+    await tx.user.deleteMany();
+    await tx.metricDefinition.deleteMany();
+    await tx.tenant.deleteMany();
+  });
 
   console.log('Creating tenants…');
   const lolc = await prisma.tenant.create({

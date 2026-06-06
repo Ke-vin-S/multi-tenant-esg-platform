@@ -10,7 +10,7 @@
  */
 import { NextResponse } from 'next/server';
 import { requireAuth, requireRole, UnauthorizedError } from '@/lib/auth';
-import { globalPrisma } from '@/lib/prisma';
+import { withGlobalContext } from '@/lib/prisma';
 import { startOfFiscalYearUTC } from '@/lib/utils';
 import { requestLogger } from '@/lib/logger';
 import type { SectorProfile, EmissionScope } from '@prisma/client';
@@ -29,29 +29,28 @@ export async function GET(req: Request) {
 
     log.info('aggregate query', { role: auth.role, sector: sectorParam ?? 'all', since: sinceDate.toISOString() });
 
-    const tenants = await globalPrisma.tenant.findMany({
-      where: sectorParam ? { sectorProfile: sectorParam } : undefined,
-      select: { id: true, name: true, sectorProfile: true, region: true },
-      orderBy: { name: 'asc' },
+    const { tenants, entries } = await withGlobalContext(async (tx) => {
+      const tenants = await tx.tenant.findMany({
+        where: sectorParam ? { sectorProfile: sectorParam } : undefined,
+        select: { id: true, name: true, sectorProfile: true, region: true },
+        orderBy: { name: 'asc' },
+      });
+      const tenantIds = tenants.map((t) => t.id);
+      const entries = await tx.metricEntry.findMany({
+        where: {
+          tenantId: { in: tenantIds },
+          reportingMonth: { gte: sinceDate },
+          co2eKg: { not: null },
+        },
+        select: {
+          tenantId: true,
+          co2eKg: true,
+          reportingMonth: true,
+          metricDefinition: { select: { scope: true, sectorProfile: true } },
+        },
+      });
+      return { tenants, entries };
     });
-    const tenantIds = tenants.map((t) => t.id);
-
-    // Pull only the joined columns we need; aggregation happens in JS so we
-    // can fork per-scope / per-sector / per-tenant without three roundtrips.
-    const entries = await globalPrisma.metricEntry.findMany({
-      where: {
-        tenantId: { in: tenantIds },
-        reportingMonth: { gte: sinceDate },
-        co2eKg: { not: null },
-      },
-      select: {
-        tenantId: true,
-        co2eKg: true,
-        reportingMonth: true,
-        metricDefinition: { select: { scope: true, sectorProfile: true } },
-      },
-    });
-
     const perTenant = new Map<string, number>();
     const perScope = new Map<EmissionScope | 'UNSCOPED', number>();
     const perSector = new Map<SectorProfile, number>();

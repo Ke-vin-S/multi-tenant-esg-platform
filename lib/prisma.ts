@@ -53,3 +53,19 @@ export async function withTenantContext<T>(
     return fn(tx);
   });
 }
+
+/**
+ * Run `fn` inside a transaction with `app.bypass_rls = on` so the privileged
+ * client can read across all tenants' MetricEntry rows.
+ *
+ * Needed because ALTER ROLE … SET is not reliably applied through Neon's
+ * PgBouncer in transaction mode — the set_config call is the only reliable path.
+ */
+export async function withGlobalContext<T>(
+  fn: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  return globalPrisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+    return fn(tx);
+  });
+}

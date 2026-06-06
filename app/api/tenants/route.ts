@@ -8,7 +8,7 @@
  */
 import { NextResponse } from 'next/server';
 import { requireAuth, requireRole, UnauthorizedError } from '@/lib/auth';
-import { globalPrisma } from '@/lib/prisma';
+import { withGlobalContext } from '@/lib/prisma';
 import { startOfMonthUTC } from '@/lib/utils';
 import { requestLogger } from '@/lib/logger';
 
@@ -23,15 +23,17 @@ export async function GET(req: Request) {
     const currentMonth = startOfMonthUTC(new Date());
     const previousMonth = new Date(Date.UTC(currentMonth.getUTCFullYear(), currentMonth.getUTCMonth() - 1, 1));
 
-    const tenants = await globalPrisma.tenant.findMany({
-      include: {
-        metricEntries: {
-          where: { reportingMonth: { gte: previousMonth } },
-          select: { reportingMonth: true, co2eKg: true },
+    const tenants = await withGlobalContext((tx) =>
+      tx.tenant.findMany({
+        include: {
+          metricEntries: {
+            where: { reportingMonth: { gte: previousMonth } },
+            select: { reportingMonth: true, co2eKg: true },
+          },
         },
-      },
-      orderBy: { name: 'asc' },
-    });
+        orderBy: { name: 'asc' },
+      }),
+    );
 
     const result = tenants.map((t) => {
       const submittedThisMonth = t.metricEntries.some(
