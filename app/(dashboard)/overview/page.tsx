@@ -7,6 +7,7 @@ import { ResourceDonutChart } from '@/components/charts/ResourceDonutChart';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatNumber, formatTonnes } from '@/lib/utils';
+import { SCOPE_LABELS } from '@/lib/scope-labels';
 import { useAuth } from '@/hooks/useAuth';
 import type { MetricEntryDTO } from '@/types';
 import Link from 'next/link';
@@ -78,8 +79,8 @@ export default function OverviewPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Total CO₂e" value={formatNumber(totalCo2eKg / 1000)} unit="tCO₂e" />
-        <KpiCard label="Scope 1" value={formatNumber(scope1Kg / 1000)} unit="tCO₂e" />
-        <KpiCard label="Scope 2" value={formatNumber(scope2Kg / 1000)} unit="tCO₂e" />
+        <KpiCard label="Scope 1" description={SCOPE_LABELS.SCOPE_1.description} value={formatNumber(scope1Kg / 1000)} unit="tCO₂e" />
+        <KpiCard label="Scope 2" description={SCOPE_LABELS.SCOPE_2.description} value={formatNumber(scope2Kg / 1000)} unit="tCO₂e" />
         <KpiCard label="Metrics tracked" value={String(distinctMetrics)} unit="categories" />
       </div>
 

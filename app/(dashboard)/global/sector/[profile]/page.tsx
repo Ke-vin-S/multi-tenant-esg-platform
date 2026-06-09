@@ -8,6 +8,7 @@ import { SubsidiaryLeaderboard } from '@/components/charts/SubsidiaryLeaderboard
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { RoleGuard } from '@/components/layout/RoleGuard';
 import { formatNumber } from '@/lib/utils';
+import { SCOPE_LABELS } from '@/lib/scope-labels';
 import type { SectorProfile } from '@/types';
 
 import { authFetcher } from '@/lib/fetcher';
@@ -48,8 +49,8 @@ function SectorInner({ sector }: { sector: SectorProfile }) {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <KpiCard label="Sector total" value={formatNumber(data.totalCo2eKg / 1000)} unit="tCO₂e" />
-        <KpiCard label="Scope 1" value={formatNumber(scope1 / 1000)} unit="tCO₂e" />
-        <KpiCard label="Scope 2" value={formatNumber(scope2 / 1000)} unit="tCO₂e" />
+        <KpiCard label="Scope 1" description={SCOPE_LABELS.SCOPE_1.description} value={formatNumber(scope1 / 1000)} unit="tCO₂e" />
+        <KpiCard label="Scope 2" description={SCOPE_LABELS.SCOPE_2.description} value={formatNumber(scope2 / 1000)} unit="tCO₂e" />
       </div>
 
       <Card>

@@ -8,6 +8,7 @@ import { SubsidiaryLeaderboard } from '@/components/charts/SubsidiaryLeaderboard
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { RoleGuard } from '@/components/layout/RoleGuard';
 import { formatNumber } from '@/lib/utils';
+import { SCOPE_LABELS } from '@/lib/scope-labels';
 import type { SectorProfile, EmissionScope } from '@/types';
 import { authFetcher } from '@/lib/fetcher';
 
@@ -58,8 +59,8 @@ function GlobalInner() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Total CO₂e" value={formatNumber(tonnes)} unit="tCO₂e" />
-        <KpiCard label="Scope 1" value={formatNumber(scope1 / 1000)} unit="tCO₂e" />
-        <KpiCard label="Scope 2" value={formatNumber(scope2 / 1000)} unit="tCO₂e" />
+        <KpiCard label="Scope 1" description={SCOPE_LABELS.SCOPE_1.description} value={formatNumber(scope1 / 1000)} unit="tCO₂e" />
+        <KpiCard label="Scope 2" description={SCOPE_LABELS.SCOPE_2.description} value={formatNumber(scope2 / 1000)} unit="tCO₂e" />
         <KpiCard label="Sectors reporting" value={String(sectorCount)} unit="of 3" />
       </div>
 

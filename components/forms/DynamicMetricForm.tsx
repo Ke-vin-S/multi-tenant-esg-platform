@@ -9,6 +9,7 @@ import { FileUploadZone } from './FileUploadZone';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useMetricDefinitions } from '@/hooks/useMetricDefinitions';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { scopeShort } from '@/lib/scope-labels';
 
 function currentMonth(): string {
   const d = new Date();
@@ -97,7 +98,7 @@ export function DynamicMetricForm() {
 
       {carbon.length > 0 && (
         <Card>
-          <CardHeader title="Carbon-impacting metrics" subtitle="These feed into Scope 1 / Scope 2 totals." />
+          <CardHeader title="Carbon-impacting metrics" subtitle="These feed into Scope 1 (direct) / Scope 2 (grid electricity) totals." />
           <FieldGrid defs={carbon} values={values} onChange={(id, v) => setValues((p) => ({ ...p, [id]: v }))} />
         </Card>
       )}
@@ -156,7 +157,7 @@ function FieldGrid({
         <label key={d.id} className="block">
           <span className="mb-1 flex items-center gap-2 text-sm font-medium text-ink-700 dark:text-ink-200">
             {d.name}
-            {d.scope && <Badge tone="neutral">{d.scope.replace('_', ' ')}</Badge>}
+            {d.scope && <Badge tone="neutral">{scopeShort(d.scope)}</Badge>}
           </span>
           <Input
             type="number"

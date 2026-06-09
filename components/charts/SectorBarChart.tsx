@@ -2,6 +2,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatNumber } from '@/lib/utils';
 import { useDarkMode, chartColors } from '@/hooks/useDarkMode';
+import { SCOPE_LABELS } from '@/lib/scope-labels';
 
 export interface SectorBarRow {
   name: string;
@@ -12,11 +13,14 @@ export interface SectorBarRow {
 
 export function SectorBarChart({ data }: { data: SectorBarRow[] }) {
   const c = chartColors(useDarkMode());
+  const s1 = SCOPE_LABELS.SCOPE_1.short;
+  const s2 = SCOPE_LABELS.SCOPE_2.short;
+  const s3 = SCOPE_LABELS.SCOPE_3.short;
   const tonnes = data.map((r) => ({
     name: r.name,
-    'Scope 1': (r.scope1 ?? 0) / 1000,
-    'Scope 2': (r.scope2 ?? 0) / 1000,
-    'Scope 3': (r.scope3 ?? 0) / 1000,
+    [s1]: (r.scope1 ?? 0) / 1000,
+    [s2]: (r.scope2 ?? 0) / 1000,
+    [s3]: (r.scope3 ?? 0) / 1000,
   }));
   return (
     <div className="h-72 w-full">
@@ -37,9 +41,9 @@ export function SectorBarChart({ data }: { data: SectorBarRow[] }) {
             formatter={(v: number) => [`${formatNumber(v)} tCO₂e`, '']}
           />
           <Legend wrapperStyle={{ fontSize: 12, color: c.axisText }} />
-          <Bar dataKey="Scope 1" stackId="a" fill={c.bar.scope1} />
-          <Bar dataKey="Scope 2" stackId="a" fill={c.bar.scope2} />
-          <Bar dataKey="Scope 3" stackId="a" fill={c.bar.scope3} radius={[4, 4, 0, 0]} />
+          <Bar dataKey={s1} stackId="a" fill={c.bar.scope1} />
+          <Bar dataKey={s2} stackId="a" fill={c.bar.scope2} />
+          <Bar dataKey={s3} stackId="a" fill={c.bar.scope3} radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatNumber, monthLabel } from '@/lib/utils';
+import { scopeShort } from '@/lib/scope-labels';
 import type { MetricEntryDTO } from '@/types';
 
 import { authFetcher } from '@/lib/fetcher';
@@ -49,7 +50,7 @@ export default function AuditLedgerPage() {
                   <td className="px-4 py-3 font-medium text-ink-900 dark:text-ink-50">{e.metricName}</td>
                   <td className="px-4 py-3">
                     {e.scope
-                      ? <Badge tone="neutral">{e.scope.replace('_', ' ')}</Badge>
+                      ? <Badge tone="neutral">{scopeShort(e.scope)}</Badge>
                       : <span className="text-xs text-ink-400 dark:text-ink-500">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-ink-700 dark:text-ink-200">

@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 
 export function KpiCard({
   label,
+  description,
   value,
   unit,
   delta,
@@ -9,6 +10,7 @@ export function KpiCard({
   className,
 }: {
   label: string;
+  description?: string;
   value: string;
   unit?: string;
   delta?: string;
@@ -24,6 +26,7 @@ export function KpiCard({
   return (
     <div className={cn('card p-5', className)}>
       <div className="text-xs font-medium tracking-wide text-ink-500 uppercase dark:text-ink-400">{label}</div>
+      {description && <div className="mt-0.5 text-xs text-ink-400 dark:text-ink-500">{description}</div>}
       <div className="mt-2 flex items-baseline gap-2">
         <span className="text-3xl font-semibold tabular-nums text-ink-900 dark:text-ink-50">{value}</span>
         {unit && <span className="text-sm text-ink-500 dark:text-ink-400">{unit}</span>}
